@@ -31,8 +31,10 @@ python -m backend
 
 ```bash
 python -m backend --reload          # 后端 :8000
-cd frontend && npm run dev          # 前端 :5173
+cd frontend && npm run dev          # 前端 :51229（监听 0.0.0.0）
 ```
+
+前端开发服务器绑定在 `0.0.0.0:51229`，局域网内其他机器可以直接用 `<本机IP>:51229` 打开。后端默认也监听 `0.0.0.0:8000`；即使不是，`/api` 的代理由 dev server 自己发起，别的机器访问时前端照样能拿到接口。
 
 ## 部署到另一台机器
 
