@@ -1,0 +1,28 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ---- Node ----
+# 注意：frontend/dist/ 是**故意提交入库**的。
+# 部署目标机器只需要 Python，不必装 Node —— 见 README「部署」一节。
+node_modules/
+
+# ---- 运行时数据 ----
+# 归档原件、合并结果、缩略图缓存、临时文件、审计库全部落在这里。
+# 归档件是用户上传的原件副本，绝不允许进入版本库。
+storage/
+
+# 冒烟测试现场构造的 PDF 夹具，每次运行都会重建。
+scripts/_fixtures/
+
+# ---- 编辑器 / 系统 ----
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# ---- 环境变量 ----
+.env

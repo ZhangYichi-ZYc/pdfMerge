@@ -1,0 +1,26 @@
+# PDF 合并工具站 —— 后端依赖
+#
+# 版本全部锁定（== 而非 >=）。这个项目会被搬到别的机器上部署，目标机器上的
+# 解析结果必须和这里一致，否则「在 A 机器能跑、在 B 机器报错」这种问题会在
+# 最糟糕的时刻出现。
+#
+# 安装：
+#     <目标机器上的 python> -m pip install -r requirements.txt
+#
+# 注意：**不装 uvloop**。它是 POSIX-only 的，在 Windows 上装不上；uvicorn 的
+# 默认依赖里也不含它（被 sys_platform != 'win32' 和 extra == 'standard' 双重
+# 门禁挡住），所以直接用普通的 uvicorn 即可，不要加 [standard]。
+
+# ---- Web 层 ----
+# FastAPI 白送一份自动生成的 OpenAPI 文档，合规审查时能直接看接口长什么样。
+fastapi==0.141.1
+uvicorn==0.53.0
+# multipart/form-data 解析。FastAPI 收文件上传必需，缺了会在启动时直接报错。
+python-multipart==0.0.32
+
+# ---- PDF 引擎 ----
+# 合并、签名检测、注释扁平化、栅格化全走 PyMuPDF（MuPDF 的绑定）。
+# 纯 Python 依赖，无外部二进制 —— 不需要 Ghostscript，不需要打印子系统。
+pymupdf==1.28.2
+# 栅格化兜底路径用 PIL 重建 PDF。虽然当前环境已自带，仍显式声明。
+pillow==12.3.0
