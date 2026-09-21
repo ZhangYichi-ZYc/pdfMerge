@@ -129,6 +129,24 @@ input {
   white-space: nowrap;
 }
 
+/* 窄屏上页眉三段信息放不进一行。必须显式允许换行：这个 nowrap 的字符串是
+   一整块不可断的文本，它的 min-content 宽度会把整个页面顶宽，浏览器随后
+   缩放到放得下为止 —— 表现就是「手机上字莫名其妙变小了」。 */
+@media (max-width: 700px) {
+  .masthead {
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 3px 12px;
+    padding: 22px 0 16px;
+    margin-bottom: 18px;
+  }
+  .masthead .limits {
+    flex-basis: 100%;
+    margin-left: 0;
+    white-space: normal;
+  }
+}
+
 /* --------------------------------------------------------------- 投放区 */
 .drop {
   position: relative;
@@ -215,6 +233,7 @@ input {
 }
 
 .linkish {
+  position: relative;
   background: none;
   border: 0;
   padding: 2px 0;
@@ -222,6 +241,14 @@ input {
   color: var(--ink-2);
   cursor: pointer;
   border-bottom: 1px solid var(--rule-strong);
+}
+
+/* 视觉上仍是一条细下划线，但触控区域被撑到约 32px 高 ——
+   手机上 14px 高的文字链接是点不中的。 */
+.linkish::after {
+  content: "";
+  position: absolute;
+  inset: -8px -8px;
 }
 
 .linkish:hover {
@@ -254,20 +281,23 @@ input {
 }
 
 .drop-file {
-  width: 20px;
-  height: 20px;
+  /* 视觉上仍是 20px 的「×」，但点击区域是 32px —— 手指头点不中 20px 的方框。
+     尺寸给在控件本身上，比套一层 padding + 负 margin 好读，也不会影响邻居。 */
+  width: 32px;
+  height: 32px;
   border: 0;
   background: none;
   color: var(--ink-3);
   cursor: pointer;
-  border-radius: 2px;
-  font-size: 15px;
+  border-radius: 3px;
+  font-size: 17px;
   line-height: 1;
   opacity: 0;
   transition: opacity 0.12s, color 0.12s;
 }
 
-.row:hover .drop-file {
+.row:hover .drop-file,
+.row:focus-within .drop-file {
   opacity: 1;
 }
 
@@ -284,14 +314,18 @@ input {
   background: var(--seal-soft);
 }
 
-/* 拖拽手柄：出现得克制，悬停时才明显 —— 它不是装饰，是功能入口。 */
+/* 拖拽手柄：出现得克制，悬停时才明显 —— 它不是装饰，是功能入口。
+   撑满整行高度，否则触控目标就只有字形那么大（约 16x13），手指按不中。 */
 .handle {
   cursor: grab;
   color: var(--rule-strong);
   user-select: none;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1;
-  text-align: center;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: color 0.12s;
 }
 
@@ -497,10 +531,20 @@ button.primary.wide {
   display: flex;
   align-items: center;
   gap: 7px;
+  /* 整行 32px 高：15px 的方块靠它自己撑不出够手指点的区域，
+     真正可点的是这个 label（点文字也能切换）。 */
+  min-height: 32px;
+  padding: 6px 0;
   font-size: 12.5px;
   color: var(--ink-2);
   cursor: pointer;
   user-select: none;
+}
+
+/* 与右侧输入框的基线对齐：输入框上方有一个 11.5px 的字段名。
+   写在这里而不是模板的 style 属性上，是为了让 min-height 生效。 */
+.actionbar .check {
+  margin-bottom: 4px;
 }
 
 .check input {
@@ -638,22 +682,138 @@ button.primary.wide {
   border-color: var(--seal-line);
 }
 
-@media (max-width: 620px) {
+/* ======================================================== 触屏兜底
+   必须放在所有 :hover 规则之后 —— 媒体查询不增加优先级，同样特写下
+   后出现的规则才生效。放在前面会被后面的 :hover 覆盖掉。
+
+   触屏没有真正的 hover，任何「悬停才出现」的东西在手机上等于不存在。   */
+@media (hover: none) {
+  .drop-file {
+    opacity: 1;
+  }
+
+  .handle {
+    color: var(--ink-3);
+  }
+
+  /* 触屏上按下会短暂触发 :hover，颜色闪一下很难看 —— 取消这几处悬停变色 */
+  .row:hover {
+    background: var(--surface);
+  }
+
+  .row:hover .ordinal {
+    color: var(--ink-3);
+  }
+}
+
+/* ============================================================ 窄屏
+   断点取 700px：再宽一点桌面端那套 7 列清单还放得下，再窄就必须改结构。
+
+   清单行在窄屏上从「一行 7 格」改成「两行卡片」：上行是文件名与签名标记/
+   移除，下行是页数与体积。硬把 7 格挤进 320px 的结果是每格都窄到不能看，
+   而且缩略图会占掉本该给文件名的宽度 —— 而文件名才是用户唯一用来辨认
+   文件的东西。
+
+   每一格都显式摆放（grid-area），不靠自动流。只改列数而不显式摆放，多出来
+   的元素会落进隐式行，行高失控、内容错位。                                  */
+@media (max-width: 700px) {
   .shell {
-    padding: 0 16px 80px;
+    padding: 0 14px 72px;
   }
+
+  .drop {
+    padding: 30px 16px;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    padding: 18px 2px 8px;
+  }
+
   .row {
-    grid-template-columns: 16px 24px 44px minmax(0, 1fr) auto;
-    gap: 10px;
+    grid-template-columns: 26px 22px 44px minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    column-gap: 9px;
+    row-gap: 1px;
+    padding: 8px 6px 8px 0;
   }
-  .row .metric.pages {
-    display: none;
+
+  /* 手柄与序号跨越两行，在行的垂直中线上 */
+  .handle {
+    grid-area: 1 / 1 / 3 / 2;
+    font-size: 15px;
   }
+
+  .ordinal {
+    grid-area: 1 / 2 / 3 / 3;
+  }
+
   .thumb {
+    grid-area: 1 / 3 / 3 / 4;
     width: 44px;
     height: 58px;
   }
+
+  /* 文件名允许折行 —— 它是这行里唯一的识别信息，宁可把行撑高也不要被截成
+     「附件一（带签…」。错误原因（.sub）同理，一并保留，绝不隐藏。 */
+  .name {
+    grid-area: 1 / 4 / 2 / 5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    overflow: visible;
+  }
+
+  .metric.pages {
+    grid-area: 2 / 4 / 3 / 5;
+    text-align: left;
+  }
+
+  .metric.dim {
+    grid-area: 2 / 5 / 3 / 6;
+  }
+
+  .cell-end {
+    grid-area: 1 / 5 / 2 / 6;
+    gap: 2px;
+  }
+
   .mark {
+    padding: 1px 4px;
+  }
+
+  /* 输出文件名占满一行，按钮占满一行 —— 并排会把两者都挤变形 */
+  .actionbar {
+    gap: 14px;
+  }
+
+  .field {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  button.primary.wide {
+    flex: 1 1 100%;
+  }
+}
+
+/* 更窄的机型（iPhone SE / 小屏安卓）：再收一档，把宽度让给文件名 */
+@media (max-width: 380px) {
+  .shell {
+    padding: 0 12px 64px;
+  }
+
+  .row {
+    grid-template-columns: 22px 18px 40px minmax(0, 1fr) auto;
+    column-gap: 7px;
+  }
+
+  .thumb {
+    width: 40px;
+    height: 54px;
+  }
+
+  .masthead .tagline {
     display: none;
   }
 }

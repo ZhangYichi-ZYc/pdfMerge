@@ -439,7 +439,7 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <label class="check" style="padding-bottom: 9px">
+        <label class="check">
           <input v-model="forceAll" type="checkbox" />
           强制保留签名外观
         </label>
